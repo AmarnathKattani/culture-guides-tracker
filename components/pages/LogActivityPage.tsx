@@ -204,7 +204,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-6">
-          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent tracking-normal">
             Log Your Activity
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">

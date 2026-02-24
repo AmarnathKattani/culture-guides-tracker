@@ -144,13 +144,13 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-12 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl z-50"
+                        className="absolute right-0 top-12 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl z-50"
                       >
                         <div className="p-4">
                           <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                             Signed in as:
                           </div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4 break-all">
                             {user?.primaryEmailAddress?.emailAddress}
                           </div>
                           <Button
