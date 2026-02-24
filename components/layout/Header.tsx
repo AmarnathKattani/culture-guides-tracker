@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Sun, Moon } from "lucide-react"
+import { Menu, X, Sun, Moon, User, LogOut } from "lucide-react"
 import { useTheme } from "next-themes"
 import Image from "next/image"
-import { UserButton, SignedIn, SignedOut, SignInButton } from "@clerk/nextjs"
+import { SignedIn, SignedOut, SignInButton, useClerk, useUser } from "@clerk/nextjs"
 
 interface HeaderProps {
   activeTab: string
@@ -22,13 +22,31 @@ const navItems = [
 
 export default function Header({ activeTab, onTabChange }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const { signOut } = useClerk()
+  const { user } = useUser()
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Only render theme-dependent content after mounting to avoid hydration mismatches
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [userMenuOpen])
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -104,13 +122,53 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
 
               {/* User Auth */}
               <SignedIn>
-                <UserButton
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-9 h-9 rounded-xl ring-2 ring-orange-400/50 hover:ring-orange-400 transition-all",
-                    },
-                  }}
-                />
+                <div className="relative" ref={userMenuRef}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="rounded-xl bg-gray-100/80 dark:bg-gray-800/50 hover:bg-gray-200/80 dark:hover:bg-gray-700/50 border-0 shadow-sm"
+                    >
+                      <User className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                    </Button>
+                  </motion.div>
+
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-12 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl z-50"
+                      >
+                        <div className="p-4">
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            Signed in as:
+                          </div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
+                            {user?.primaryEmailAddress?.emailAddress}
+                          </div>
+                          <Button
+                            onClick={() => {
+                              signOut()
+                              setUserMenuOpen(false)
+                            }}
+                            variant="ghost"
+                            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                          >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Sign out
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </SignedIn>
               <SignedOut>
                 <SignInButton mode="modal">
