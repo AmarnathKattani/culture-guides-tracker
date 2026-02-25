@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { localStorageService } from "@/lib/local-storage"
 import { googleSheetsService } from "@/lib/google-sheets"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
@@ -10,10 +12,10 @@ export async function GET(request: NextRequest) {
     const quarter = searchParams.get('quarter') || undefined
 
     const limit = parseInt(limitParam)
-    if (isNaN(limit) || limit < 1 || limit > 1000) {
+    if (isNaN(limit) || limit < 1 || limit > 5000) {
       return NextResponse.json({ 
         error: "Invalid limit parameter",
-        message: "Limit must be a number between 1 and 1000"
+        message: "Limit must be a number between 1 and 5000"
       }, { status: 400 })
     }
 
@@ -22,8 +24,11 @@ export async function GET(request: NextRequest) {
 
     try {
       if (googleSheetsService.isGoogleSheetsConfigured()) {
-        if (type === 'leaderboard') {
-          const activities = await googleSheetsService.getActivities(1000, quarter)
+        if (type === 'stats') {
+          const activities = await googleSheetsService.getActivities(5000, quarter)
+          data = generateStats(activities)
+        } else if (type === 'leaderboard') {
+          const activities = await googleSheetsService.getActivities(5000, quarter)
           data = generateLeaderboard(activities)
         } else {
           data = await googleSheetsService.getActivities(limit, quarter)
@@ -41,7 +46,10 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       console.log('⚠️  Google Sheets not available, using local storage:', error instanceof Error ? error.message : String(error))
-      if (type === 'leaderboard') {
+      if (type === 'stats') {
+        const activities = await localStorageService.getActivities(5000)
+        data = generateStats(activities)
+      } else if (type === 'leaderboard') {
         data = await localStorageService.getLeaderboard()
       } else {
         data = await localStorageService.getActivities(limit)
@@ -75,14 +83,18 @@ export async function GET(request: NextRequest) {
 
 function generateLeaderboard(activities: any[]): any[] {
   const leaderboard = activities.reduce((acc: any, activity) => {
-    const name = activity.name
+    const name = activity.fullName || activity.name
+    if (!name) return acc
+
     if (!acc[name]) {
       acc[name] = {
         name,
         points: 0,
         activities: 0,
         lastActivity: activity.timestamp,
-        slackHandle: activity.slackHandle
+        emailAddress: activity.emailAddress || activity.slackHandle,
+        region: activity.region,
+        hub: activity.hub
       }
     }
     acc[name].points += activity.points || 0
@@ -93,5 +105,21 @@ function generateLeaderboard(activities: any[]): any[] {
 
   return Object.values(leaderboard)
     .sort((a: any, b: any) => b.points - a.points)
-    .slice(0, 10)
+}
+
+function generateStats(activities: any[]): { uniqueUsers: number; totalPoints: number; totalActivities: number; avgPointsPerGuide: number } {
+  const uniqueNames = new Set<string>()
+  let totalPoints = 0
+
+  for (const activity of activities) {
+    const name = activity.fullName || activity.name
+    if (name) uniqueNames.add(name)
+    totalPoints += activity.points || 0
+  }
+
+  const uniqueUsers = uniqueNames.size
+  const totalActivities = activities.length
+  const avgPointsPerGuide = uniqueUsers > 0 ? Math.round(totalPoints / uniqueUsers) : 0
+
+  return { uniqueUsers, totalPoints, totalActivities, avgPointsPerGuide }
 }

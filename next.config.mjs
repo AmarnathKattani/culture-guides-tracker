@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {
@@ -12,9 +14,18 @@ const nextConfig = {
       },
     ],
   },
-  // Server-only env vars (Google Sheets, Slack, HuggingFace) are accessed
-  // directly via process.env in API routes — no need to expose them here.
-  // Only NEXT_PUBLIC_* vars are needed in this block for client-side access.
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig

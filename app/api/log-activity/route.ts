@@ -14,22 +14,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 })
     }
 
-    const { role, eventName, eventDate, name, slackHandle, notes, notifyManager } = body
+    const { fullName, emailAddress, region, hub, eventName, role, manager, program } = body
 
     // Validate required fields
-    if (!role || !eventName || !eventDate || !name || !slackHandle) {
+    if (!fullName || !emailAddress || !region || !hub || !eventName || !role || !manager || !program) {
       return NextResponse.json({ 
         error: "Missing required fields",
-        required: ["role", "eventName", "eventDate", "name", "slackHandle"]
+        required: ["fullName", "emailAddress", "region", "hub", "eventName", "role", "manager", "program"]
       }, { status: 400 })
     }
 
     // Validate role is a valid option
-    const validRoles = ["project-manager", "committee-member", "on-site-help"]
+    const validRoles = ["project-manager", "committee-member", "on-site-help", "managed-committee-call"]
     if (!validRoles.includes(role)) {
       return NextResponse.json({ 
         error: "Invalid role",
         validRoles
+      }, { status: 400 })
+    }
+
+    // Validate region is a valid option
+    const validRegions = ["AMER", "EMEA", "JAPAC", "India"]
+    if (!validRegions.includes(region)) {
+      return NextResponse.json({ 
+        error: "Invalid region",
+        validRegions
+      }, { status: 400 })
+    }
+
+    // Validate program is a valid option
+    const validPrograms = ["Culture Guides", "Salesforce at Home"]
+    if (!validPrograms.includes(program)) {
+      return NextResponse.json({ 
+        error: "Invalid program",
+        validPrograms
       }, { status: 400 })
     }
 
@@ -38,18 +56,39 @@ export async function POST(request: NextRequest) {
       "project-manager": 100,
       "committee-member": 50,
       "on-site-help": 25,
+      "managed-committee-call": 25,
     }
     const points = pointsMap[role] || 0
 
+    // Generate current quarter
+    const now = new Date()
+    const currentMonth = now.getMonth() + 1 // 1-12
+    const currentYear = now.getFullYear()
+    
+    // Determine quarter based on Salesforce fiscal year (Feb-Jan)
+    let quarter: string
+    if (currentMonth >= 2 && currentMonth <= 4) {
+      quarter = `Q1 FY${String(currentYear + 1).slice(-2)}`
+    } else if (currentMonth >= 5 && currentMonth <= 7) {
+      quarter = `Q2 FY${String(currentYear + 1).slice(-2)}`
+    } else if (currentMonth >= 8 && currentMonth <= 10) {
+      quarter = `Q3 FY${String(currentYear + 1).slice(-2)}`
+    } else {
+      quarter = `Q4 FY${String(currentYear + 1).slice(-2)}`
+    }
+
     // Log activity - try Google Sheets first, fallback to local storage
     const activityData = {
-      name,
-      slackHandle,
-      role,
+      fullName,
+      emailAddress,
+      region,
+      hub,
       eventName,
-      eventDate,
+      role,
+      manager,
+      program,
+      quarter,
       points,
-      notes,
     }
 
     let loggedTo = 'local_storage' // Default for MVP
@@ -84,7 +123,8 @@ export async function POST(request: NextRequest) {
         const roleLabels: Record<string, string> = {
           "project-manager": "Project Manager",
           "committee-member": "Committee Member",
-          "on-site-help": "On-site Help",
+          "on-site-help": "On-site Help (Logistics)",
+          "managed-committee-call": "Managed Committee Call",
         }
 
         const slackMessage = {
@@ -103,11 +143,19 @@ export async function POST(request: NextRequest) {
               fields: [
                 {
                   type: "mrkdwn",
-                  text: `*Name:* ${name}`,
+                  text: `*Name:* ${fullName}`,
                 },
                 {
                   type: "mrkdwn",
-                  text: `*Slack:* ${slackHandle}`,
+                  text: `*Email:* ${emailAddress}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Region:* ${region}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Hub:* ${hub}`,
                 },
                 {
                   type: "mrkdwn",
@@ -123,21 +171,19 @@ export async function POST(request: NextRequest) {
                 },
                 {
                   type: "mrkdwn",
-                  text: `*Date:* ${eventDate}`,
+                  text: `*Manager:* ${manager}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Program:* ${program}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Quarter:* ${quarter}`,
                 },
               ],
             },
           ],
-        }
-
-        if (notes) {
-          slackMessage.blocks.push({
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `*Notes:* ${notes}`,
-            },
-          })
         }
 
         await slack.chat.postMessage(slackMessage)

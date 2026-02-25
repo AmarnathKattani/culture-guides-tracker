@@ -1,11 +1,14 @@
 interface ActivityData {
-  name: string
-  slackHandle: string
-  role: string
+  fullName: string
+  emailAddress: string
+  region: string
+  hub: string
   eventName: string
-  eventDate: string
+  role: string
+  manager: string
+  program: string
+  quarter: string
   points: number
-  notes?: string
   timestamp?: string
   id?: string
 }
@@ -14,32 +17,82 @@ interface ActivityData {
 // Note: Data will reset between function cold starts - perfect for MVP testing
 let activitiesCache: ActivityData[] = []
 
+const Q1_FY27_TEST_ACTIVITIES = [
+  { eventName: "Culture Connect Q1 Kickoff", role: "project-manager", points: 100 },
+  { eventName: "Ohana Appreciation Week", role: "committee-member", points: 50 },
+  { eventName: "Innovation Showcase", role: "project-manager", points: 100 },
+  { eventName: "Mindfulness Monday", role: "on-site-help", points: 25 },
+  { eventName: "V2MOM Workshop", role: "committee-member", points: 50 },
+  { eventName: "Culture Connect SF", role: "project-manager", points: 100 },
+  { eventName: "Team Building Event", role: "on-site-help", points: 25 },
+  { eventName: "Quarterly Planning Call", role: "managed-committee-call", points: 25 },
+  { eventName: "Diversity & Inclusion Summit", role: "committee-member", points: 50 },
+  { eventName: "Volunteer Day", role: "on-site-help", points: 25 },
+  { eventName: "Culture Champions Meetup", role: "committee-member", points: 50 },
+  { eventName: "Q1 Retrospective", role: "managed-committee-call", points: 25 },
+]
+
+const Q1_FY27_DAY_OFFSETS = [1, 3, 5, 8, 10, 12, 15, 18, 20, 22, 23, 24]
+
+function getTestUserEmail(): string | null {
+  return process.env.TEST_USER_EMAIL || null
+}
+
+function seedTestDataForUser(): void {
+  const email = getTestUserEmail()
+  if (!email) return
+
+  const activities: ActivityData[] = Q1_FY27_TEST_ACTIVITIES.map((a, i) => {
+    const date = new Date(2026, 1, Q1_FY27_DAY_OFFSETS[i])
+    return {
+      id: `test-q1fy27-${i}`,
+      fullName: "Test User",
+      emailAddress: email,
+      region: "AMER",
+      hub: "San Francisco",
+      eventName: a.eventName,
+      role: a.role,
+      manager: "Test Manager",
+      program: "Culture Guides",
+      quarter: "Q1 FY27",
+      points: a.points,
+      timestamp: date.toISOString(),
+    }
+  })
+
+  activitiesCache.push(...activities)
+  console.log(`✅ Pre-seeded ${activities.length} Q1 FY27 activities for ${email}`)
+}
+
 export class LocalStorageService {
   constructor() {
-    // Initialize with some demo data for MVP
     if (activitiesCache.length === 0) {
       activitiesCache = [
         {
-          id: 'demo-1',
-          name: 'Demo User',
-          slackHandle: '@demo.user',
-          role: 'project-manager',
-          eventName: 'Culture Connect Demo Event',
-          eventDate: new Date().toISOString().split('T')[0],
+          id: "demo-1",
+          fullName: "Demo User",
+          emailAddress: "demo.user@salesforce.com",
+          region: "AMER",
+          hub: "San Francisco",
+          eventName: "Culture Connect Demo Event",
+          role: "project-manager",
+          manager: "Demo Manager",
+          program: "Culture Guides",
+          quarter: "Q4 FY26",
           points: 100,
-          notes: 'Demo activity for testing',
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       ]
+      seedTestDataForUser()
     }
   }
 
-  async logActivity(data: ActivityData): Promise<void> {
+  async logActivity(data: ActivityData, customTimestamp?: string): Promise<void> {
     try {
       const activity = {
         ...data,
         id: generateId(),
-        timestamp: new Date().toISOString(),
+        timestamp: customTimestamp || new Date().toISOString(),
       }
 
       // Add new activity to beginning of array (latest first)
@@ -71,16 +124,18 @@ export class LocalStorageService {
     try {
       const activities = activitiesCache // Use all activities for leaderboard
       
-      // Group by name and calculate total points
+      // Group by fullName and calculate total points
       const leaderboard = activities.reduce((acc: any, activity) => {
-        const name = activity.name
+        const name = activity.fullName
         if (!acc[name]) {
           acc[name] = {
             name,
             points: 0,
             activities: 0,
             lastActivity: activity.timestamp,
-            slackHandle: activity.slackHandle
+            emailAddress: activity.emailAddress,
+            region: activity.region,
+            hub: activity.hub
           }
         }
         acc[name].points += activity.points || 0
@@ -113,7 +168,7 @@ export class LocalStorageService {
     try {
       const totalActivities = activitiesCache.length
       const totalPoints = activitiesCache.reduce((sum, activity) => sum + (activity.points || 0), 0)
-      const uniqueUsers = new Set(activitiesCache.map(activity => activity.name)).size
+      const uniqueUsers = new Set(activitiesCache.map(activity => activity.fullName)).size
       
       return { totalActivities, totalPoints, uniqueUsers }
     } catch (error) {

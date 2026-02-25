@@ -16,8 +16,9 @@ interface HeaderProps {
 const navItems = [
   { id: "home", label: "Home" },
   { id: "log-activity", label: "Log Activity" },
+  { id: "impact", label: "Your Impact" },
   { id: "dashboard", label: "Dashboard" },
-  { id: "resources", label: "Resources & AI" },
+  { id: "resources", label: "Resources" },
 ]
 
 export default function Header({ activeTab, onTabChange }: HeaderProps) {
@@ -50,7 +51,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      <div className="backdrop-blur-xl bg-white/70 dark:bg-black/70 shadow-lg shadow-black/5 dark:shadow-white/5">
+      <div className="backdrop-blur-xl bg-white/70 dark:bg-black/90 dark:border-b dark:border-gray-700/50 shadow-lg shadow-black/5 dark:shadow-black/20">
         <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-18 sm:h-20 md:h-22 lg:h-24">
             {/* Logo */}
@@ -84,7 +85,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                     className={`relative px-6 py-2.5 rounded-xl font-medium transition-all duration-300 ${
                       activeTab === item.id
                         ? "bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg hover:shadow-xl"
-                        : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-800/50"
+                        : "text-gray-700 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-700/60 dark:bg-gray-800/40"
                     }`}
                   >
                     {item.label}
@@ -111,10 +112,10 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                    className="rounded-xl bg-gray-100/80 dark:bg-gray-800/50 hover:bg-gray-200/80 dark:hover:bg-gray-700/50 hidden sm:flex border-0 shadow-sm"
+                    className="rounded-xl border-0 bg-gray-100/80 dark:bg-gray-700/60 dark:border dark:border-gray-600/50 hover:bg-gray-200/80 dark:hover:bg-gray-600/60 hidden sm:flex shadow-sm"
                   >
-                    <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-gray-700 dark:text-gray-300" />
-                    <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-gray-700 dark:text-gray-300" />
+                    <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-gray-700 dark:text-gray-200" />
+                    <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-gray-700 dark:text-gray-200" />
                     <span className="sr-only">Toggle theme</span>
                   </Button>
                 </motion.div>
@@ -131,9 +132,9 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                       variant="ghost"
                       size="icon"
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="rounded-xl bg-gray-100/80 dark:bg-gray-800/50 hover:bg-gray-200/80 dark:hover:bg-gray-700/50 border-0 shadow-sm"
+                      className="rounded-xl border-0 bg-gray-100/80 dark:bg-gray-700/60 dark:border dark:border-gray-600/50 hover:bg-gray-200/80 dark:hover:bg-gray-600/60 shadow-sm"
                     >
-                      <User className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                      <User className="h-5 w-5 text-gray-700 dark:text-gray-200" />
                     </Button>
                   </motion.div>
 
@@ -191,12 +192,12 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    className="rounded-xl bg-gray-100/80 dark:bg-gray-800/50 hover:bg-gray-200/80 dark:hover:bg-gray-700/50 border-0 shadow-sm"
+                    className="rounded-xl border-0 bg-gray-100/80 dark:bg-gray-700/60 dark:border dark:border-gray-600/50 hover:bg-gray-200/80 dark:hover:bg-gray-600/60 shadow-sm"
                   >
                     {isMobileMenuOpen ? (
-                      <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                      <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
                     ) : (
-                      <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                      <Menu className="w-6 h-6 text-gray-700 dark:text-gray-200" />
                     )}
                   </Button>
                 </motion.div>
@@ -211,7 +212,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden backdrop-blur-xl bg-white/70 dark:bg-black/70">
+            className="lg:hidden backdrop-blur-xl bg-white/70 dark:bg-black/90 dark:border-t dark:border-gray-700/50">
             <nav className="px-3 sm:px-4 py-3 sm:py-4 space-y-3">
               {navItems.map((item) => (
                 <motion.div
@@ -228,7 +229,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                     className={`w-full justify-start rounded-xl text-sm sm:text-base font-medium transition-all duration-300 ${
                       activeTab === item.id
                         ? "bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg"
-                        : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-800/50"
+                        : "text-gray-700 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-700/60 dark:bg-gray-800/40"
                     }`}
                   >
                     {item.label}
@@ -245,7 +246,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                   <Button
                     variant="ghost"
                     onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                    className="w-full justify-start rounded-xl text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-800/50 sm:hidden transition-all duration-300"
+                    className="w-full justify-start rounded-xl text-sm sm:text-base font-medium text-gray-700 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-700/60 dark:bg-gray-800/40 sm:hidden transition-all duration-300"
                   >
                     <div className="flex items-center">
                       <Sun className="h-4 w-4 mr-2 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

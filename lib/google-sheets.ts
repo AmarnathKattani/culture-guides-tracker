@@ -1,13 +1,18 @@
 import { google } from 'googleapis'
+import * as fs from 'fs'
+import * as path from 'path'
 
 interface ActivityData {
-  name: string
-  slackHandle: string
-  role: string
+  fullName: string
+  emailAddress: string
+  region: string
+  hub: string
   eventName: string
-  eventDate: string
+  role: string
+  manager: string
+  program: string
+  quarter: string
   points: number
-  notes?: string
 }
 
 interface ServiceAccountCredentials {
@@ -16,10 +21,10 @@ interface ServiceAccountCredentials {
 }
 
 /**
- * Loads Google Sheets credentials from environment variables only.
- * Supports two patterns:
- *   1. GOOGLE_SERVICE_ACCOUNT_JSON — paste the full service account JSON string (recommended for Vercel)
- *   2. GOOGLE_SHEETS_CLIENT_EMAIL + GOOGLE_SHEETS_PRIVATE_KEY — individual fields
+ * Loads Google Sheets credentials. Supports three patterns (in order of precedence):
+ *   1. GOOGLE_SERVICE_ACCOUNT_JSON — full service account JSON string (recommended for Vercel)
+ *   2. GOOGLE_SHEETS_CLIENT_EMAIL + GOOGLE_SHEETS_PRIVATE_KEY — individual env vars
+ *   3. config/google-service-account.json (for local development)
  */
 function loadCredentials(): { credentials: ServiceAccountCredentials; spreadsheetId: string } | null {
   const spreadsheetId = process.env.GOOGLE_SHEETS_SHEET_ID
@@ -54,26 +59,58 @@ function loadCredentials(): { credentials: ServiceAccountCredentials; spreadshee
     }
   }
 
+  // Option 3: Load from config/google-service-account.json (local development)
+  const jsonPath = process.env.GOOGLE_SHEETS_CREDENTIALS_PATH
+    ? path.resolve(process.env.GOOGLE_SHEETS_CREDENTIALS_PATH)
+    : path.join(process.cwd(), 'config', 'google-service-account.json')
+
+  if (fs.existsSync(jsonPath)) {
+    try {
+      const fileContent = fs.readFileSync(jsonPath, 'utf-8')
+      const parsed = JSON.parse(fileContent)
+      if (parsed.client_email && parsed.private_key) {
+        return {
+          credentials: {
+            client_email: parsed.client_email,
+            private_key: parsed.private_key.replace(/\\n/g, '\n'),
+          },
+          spreadsheetId,
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load google-service-account.json:', e)
+    }
+  }
+
   return null
 }
 
-export function getQuarterSheetName(eventDate: string): string {
-  const date = new Date(eventDate)
-  if (isNaN(date.getTime())) {
-    const now = new Date()
-    return `Q${Math.ceil((now.getMonth() + 1) / 3)}-${now.getFullYear()}`
+export function getSalesforceFiscalQuarter(): string {
+  const now = new Date()
+  const currentMonth = now.getMonth() + 1 // 1-12
+  const currentYear = now.getFullYear()
+  
+  // Determine quarter based on Salesforce fiscal year (Feb-Jan)
+  if (currentMonth >= 2 && currentMonth <= 4) {
+    return `Q1 FY${String(currentYear + 1).slice(-2)}`
+  } else if (currentMonth >= 5 && currentMonth <= 7) {
+    return `Q2 FY${String(currentYear + 1).slice(-2)}`
+  } else if (currentMonth >= 8 && currentMonth <= 10) {
+    return `Q3 FY${String(currentYear + 1).slice(-2)}`
+  } else {
+    return `Q4 FY${String(currentYear + 1).slice(-2)}`
   }
-  const quarter = Math.ceil((date.getMonth() + 1) / 3)
-  return `Q${quarter}-${date.getFullYear()}`
+}
+
+export function getQuarterSheetName(quarter: string): string {
+  return quarter
 }
 
 export function getCurrentQuarter(): string {
-  const now = new Date()
-  const quarter = Math.ceil((now.getMonth() + 1) / 3)
-  return `Q${quarter}-${now.getFullYear()}`
+  return getSalesforceFiscalQuarter()
 }
 
-const HEADERS = ['Timestamp', 'Name', 'Slack Handle', 'Role', 'Event Name', 'Event Date', 'Points', 'Notes']
+const HEADERS = ['Timestamp', 'Full Name', 'Email Address', 'Region', 'Hub', 'What event did you work on?', 'What was your role in the event?', 'Who is your manager?', 'Which program did you work on?', 'Quarter', 'Points']
 
 export class GoogleSheetsService {
   private sheets: any
@@ -132,13 +169,13 @@ export class GoogleSheetsService {
       // Ensure headers on this tab
       const headerResp = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `'${sheetName}'!A1:H1`,
+        range: `'${sheetName}'!A1:K1`,
       })
 
       if (!headerResp.data.values || headerResp.data.values.length === 0) {
         await sheets.spreadsheets.values.update({
           spreadsheetId,
-          range: `'${sheetName}'!A1:H1`,
+          range: `'${sheetName}'!A1:K1`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values: [HEADERS] },
         })
@@ -149,13 +186,13 @@ export class GoogleSheetsService {
     }
   }
 
-  async logActivity(data: ActivityData): Promise<void> {
+  async logActivity(data: ActivityData, customTimestamp?: string): Promise<void> {
     if (!this.isConfigured) {
       throw new Error('Google Sheets not configured')
     }
 
-    const sheetName = getQuarterSheetName(data.eventDate)
-    const timestamp = new Date().toISOString()
+    const sheetName = getQuarterSheetName(data.quarter)
+    const timestamp = customTimestamp || new Date().toISOString()
     const spreadsheetId = this.getSpreadsheetId()
     const sheets = this.initializeSheets()
 
@@ -164,24 +201,81 @@ export class GoogleSheetsService {
 
       await sheets.spreadsheets.values.append({
         spreadsheetId,
-        range: `'${sheetName}'!A:H`,
+        range: `'${sheetName}'!A:K`,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: [[
             timestamp,
-            data.name,
-            data.slackHandle,
-            data.role,
+            data.fullName,
+            data.emailAddress,
+            data.region,
+            data.hub,
             data.eventName,
-            data.eventDate,
-            data.points,
-            data.notes || ''
+            data.role,
+            data.manager,
+            data.program,
+            data.quarter,
+            data.points
           ]],
         },
       })
     } catch (error) {
       console.error('Error logging to Google Sheets:', error)
       throw new Error('Failed to log activity to Google Sheets')
+    }
+  }
+
+  /**
+   * Batch import activities to a sheet. Appends rows in batches of 100.
+   */
+  async batchImportActivities(activities: ActivityData[], quarter: string = 'Q4 FY26'): Promise<{ imported: number; errors: string[] }> {
+    if (!this.isConfigured) {
+      throw new Error('Google Sheets not configured')
+    }
+
+    const sheetName = getQuarterSheetName(quarter)
+    const spreadsheetId = this.getSpreadsheetId()
+    const sheets = this.initializeSheets()
+    const errors: string[] = []
+
+    try {
+      await this.ensureSheet(sheetName)
+
+      const BATCH_SIZE = 100
+      let imported = 0
+
+      for (let i = 0; i < activities.length; i += BATCH_SIZE) {
+        const batch = activities.slice(i, i + BATCH_SIZE)
+        const rows = batch.map((data) => [
+          new Date().toISOString(),
+          data.fullName,
+          data.emailAddress,
+          data.region,
+          data.hub,
+          data.eventName,
+          data.role,
+          data.manager,
+          data.program,
+          data.quarter || quarter,
+          data.points,
+        ])
+
+        await sheets.spreadsheets.values.append({
+          spreadsheetId,
+          range: `'${sheetName}'!A:K`,
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
+          requestBody: { values: rows },
+        })
+
+        imported += batch.length
+        console.log(`Imported ${imported}/${activities.length} rows...`)
+      }
+
+      return { imported, errors }
+    } catch (error) {
+      console.error('Error batch importing to Google Sheets:', error)
+      throw new Error('Failed to batch import activities to Google Sheets')
     }
   }
 
@@ -199,7 +293,7 @@ export class GoogleSheetsService {
 
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `'${sheetName}'!A2:H${limit + 1}`,
+        range: `'${sheetName}'!A2:K${limit + 1}`,
       })
 
       if (!response.data.values) {
@@ -208,13 +302,16 @@ export class GoogleSheetsService {
 
       return response.data.values.map((row: any[]) => ({
         timestamp: row[0],
-        name: row[1],
-        slackHandle: row[2],
-        role: row[3],
-        eventName: row[4],
-        eventDate: row[5],
-        points: parseInt(row[6]) || 0,
-        notes: row[7] || '',
+        fullName: row[1],
+        emailAddress: row[2],
+        region: row[3],
+        hub: row[4],
+        eventName: row[5],
+        role: row[6],
+        manager: row[7],
+        program: row[8],
+        quarter: row[9],
+        points: parseInt(row[10]) || 0,
       }))
     } catch (error) {
       console.error('Error fetching activities from Google Sheets:', error)
@@ -236,7 +333,7 @@ export class GoogleSheetsService {
 
       await sheets.spreadsheets.values.clear({
         spreadsheetId,
-        range: `'${sheetName}'!A2:H`,
+        range: `'${sheetName}'!A2:K`,
       })
 
       console.log(`✅ Cleared data from sheet "${sheetName}"`)
@@ -260,12 +357,16 @@ export class GoogleSheetsService {
         .map((s: any) => s.properties?.title)
         .filter(Boolean)
 
-      // Return only quarter-formatted tabs (Q1-2026, Q2-2026, etc.)
+      // Return only quarter-formatted tabs (Q1 FY26, Q2 FY26, etc.)
       return allTabs
-        .filter((name: string) => /^Q[1-4]-\d{4}$/.test(name))
+        .filter((name: string) => /^Q[1-4] FY\d{2}$/.test(name))
         .sort((a: string, b: string) => {
-          const [qa, ya] = a.replace('Q', '').split('-').map(Number)
-          const [qb, yb] = b.replace('Q', '').split('-').map(Number)
+          const aMatch = a.match(/^Q(\d) FY(\d{2})$/)
+          const bMatch = b.match(/^Q(\d) FY(\d{2})$/)
+          if (!aMatch || !bMatch) return 0
+          
+          const [, qa, ya] = aMatch.map(Number)
+          const [, qb, yb] = bMatch.map(Number)
           return ya !== yb ? yb - ya : qb - qa
         })
     } catch (error) {

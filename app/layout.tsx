@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
+import { DotPatternBackground } from "@/components/ui/dot-pattern-background"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -36,8 +38,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <DotPatternBackground />
           <div className="min-h-screen relative">
             {children}
+            <Toaster />
           </div>
         </ThemeProvider>
       </body>

@@ -2,13 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { CheckCircle, Star, Users, Heart, Zap, Loader2 } from "lucide-react"
+import { CheckCircle, Star, Users, Heart, Phone, Loader2 } from "lucide-react"
+import { useUser } from "@clerk/nextjs"
 
 const activityTypes = [
   {
@@ -29,11 +29,19 @@ const activityTypes = [
   },
   {
     id: "on-site-help",
-    role: "On-site Help",
+    role: "On-site Help (Logistics)",
     points: 25,
     description: "Provide support during events and activities",
     gradient: "from-green-500 to-emerald-500",
     icon: Heart,
+  },
+  {
+    id: "managed-committee-call",
+    role: "Managed Committee Call",
+    points: 25,
+    description: "Organize and lead committee meetings",
+    gradient: "from-orange-500 to-red-500",
+    icon: Phone,
   },
 ]
 
@@ -42,30 +50,44 @@ interface LogActivityPageProps {
 }
 
 export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
+  const { user } = useUser()
   const [formData, setFormData] = useState({
-    role: "",
+    fullName: "",
+    emailAddress: "",
+    region: "",
+    hub: "",
     eventName: "",
-    eventDate: "",
-    name: "",
-    slackHandle: "",
-    notes: "",
-    notifyManager: false,
+    role: "",
+    manager: "",
+    program: "",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionResult, setSubmissionResult] = useState<any>(null)
 
+  // Auto-populate user data from Clerk
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        emailAddress: user.primaryEmailAddress?.emailAddress || '',
+      }))
+    }
+  }, [user])
+
   const handleDismissSuccess = () => {
     setIsSubmitted(false)
     setFormData({
-      role: "",
+      fullName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+      emailAddress: user?.primaryEmailAddress?.emailAddress || '',
+      region: "",
+      hub: "",
       eventName: "",
-      eventDate: "",
-      name: "",
-      slackHandle: "",
-      notes: "",
-      notifyManager: false,
+      role: "",
+      manager: "",
+      program: "",
     })
     setSubmissionResult(null)
     onNavigate("dashboard")
@@ -73,12 +95,14 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
-    if (!formData.role) newErrors.role = "Please select a participation role."
+    if (!formData.fullName) newErrors.fullName = "Full name is required."
+    if (!formData.emailAddress) newErrors.emailAddress = "Email address is required."
+    if (!formData.region) newErrors.region = "Please select a region."
+    if (!formData.hub) newErrors.hub = "Hub is required."
     if (!formData.eventName) newErrors.eventName = "Event name is required."
-    if (!formData.eventDate) newErrors.eventDate = "Event date is required."
-    if (!formData.name) newErrors.name = "Your name is required."
-    if (!formData.slackHandle) newErrors.slackHandle = "Slack handle is required."
-    else if (!formData.slackHandle.startsWith("@")) newErrors.slackHandle = "Slack handle must start with @."
+    if (!formData.role) newErrors.role = "Please select your role in the event."
+    if (!formData.manager) newErrors.manager = "Manager name is required."
+    if (!formData.program) newErrors.program = "Please select a program."
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -115,7 +139,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
     const checked = (e.target as HTMLInputElement).checked
     setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }))
@@ -205,7 +229,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
         {/* Header */}
         <div className="text-center space-y-6">
           <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent tracking-normal">
-            Log Your Activity
+            Culture Guide Points
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
             Share your cultural contributions and earn points for making Salesforce an amazing place to work!
@@ -214,174 +238,141 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
 
         {/* Form */}
         <Card className="liquid-glass border border-gray-200 dark:border-blue-500/20 shadow-2xl p-8 md:p-12 bg-white/90 dark:bg-card/70 backdrop-blur-md">
-          <form onSubmit={handleSubmit} className="space-y-10">
-            {/* Role Selection */}
-            <div className="space-y-6">
-              <label className="block text-2xl font-bold text-center text-gray-900 dark:text-white">Choose Your Participation Role</label>
-              <div className="grid md:grid-cols-3 gap-6">
-                {activityTypes.map((activity, index) => (
-                  <motion.label
-                    key={activity.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`relative p-8 border-2 rounded-3xl cursor-pointer transition-all duration-300 group ${
-                      formData.role === activity.id
-                        ? "border-orange-500 bg-gradient-to-br from-orange-500/10 to-pink-500/10 shadow-2xl scale-105"
-                        : "border-gray-200 dark:border-white/20 hover:border-orange-300 dark:hover:border-orange-300 hover:shadow-xl hover:scale-102 bg-white/60 dark:bg-transparent"
-                    }`}
-                    whileHover={{ y: -5 }}
-                  >
-                    <input type="radio" name="role" value={activity.id} onChange={handleChange} className="sr-only" />
-
-                    <div className="text-center space-y-4">
-                      <div
-                        className={`w-20 h-20 mx-auto rounded-2xl bg-gradient-to-r ${activity.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                      >
-                        <activity.icon 
-                          className={`w-10 h-10 text-white transition-all duration-300 ${
-                            activity.id === 'project-manager' 
-                              ? 'group-hover:animate-spin-slow' 
-                              : activity.id === 'committee-member'
-                              ? 'group-hover:animate-bounce'
-                              : activity.id === 'on-site-help'
-                              ? 'group-hover:animate-heartbeat'
-                              : ''
-                          }`} 
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="text-4xl font-bold text-orange-500">{activity.points}</div>
-                        <div className="text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wider">POINTS</div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{activity.role}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{activity.description}</p>
-                      </div>
-                    </div>
-
-                    {formData.role === activity.id && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-3 -right-3 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-lg"
-                      >
-                        <CheckCircle className="w-6 h-6 text-white" />
-                      </motion.div>
-                    )}
-                  </motion.label>
-                ))}
-              </div>
-              {errors.role && <p className="text-red-500 text-center">{errors.role}</p>}
-            </div>
-
-            {/* Form Fields */}
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label htmlFor="eventName" className="block text-lg font-semibold text-gray-900 dark:text-white">
-                  Event Name *
-                </label>
-                <Input
-                  type="text"
-                  id="eventName"
-                  name="eventName"
-                  value={formData.eventName}
-                  onChange={handleChange}
-                  placeholder="e.g., Salesforce Adventure Club"
-                  className={`h-14 text-lg border-2 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${
-                    errors.eventName ? "border-red-500" : "border-gray-300 dark:border-white/20 focus:border-orange-500"
-                  }`}
-                />
-                {errors.eventName && <p className="text-red-500 text-sm">{errors.eventName}</p>}
-              </div>
-
-              <div className="space-y-3">
-                <label htmlFor="eventDate" className="block text-lg font-semibold text-gray-900 dark:text-white">
-                  Event Date *
-                </label>
-                <Input
-                  type="date"
-                  id="eventDate"
-                  name="eventDate"
-                  value={formData.eventDate}
-                  onChange={handleChange}
-                  className={`h-14 text-lg border-2 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white ${
-                    errors.eventDate ? "border-red-500" : "border-gray-300 dark:border-white/20 focus:border-orange-500"
-                  }`}
-                />
-                {errors.eventDate && <p className="text-red-500 text-sm">{errors.eventDate}</p>}
-              </div>
-
-              <div className="space-y-3">
-                <label htmlFor="name" className="block text-lg font-semibold text-gray-900 dark:text-white">
-                  Your Name *
-                </label>
-                <Input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="John Doe"
-                  className={`h-14 text-lg border-2 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${
-                    errors.name ? "border-red-500" : "border-gray-300 dark:border-white/20 focus:border-orange-500"
-                  }`}
-                />
-                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-              </div>
-
-              <div className="space-y-3">
-                <label htmlFor="slackHandle" className="block text-lg font-semibold text-gray-900 dark:text-white">
-                  Slack Handle *
-                </label>
-                <Input
-                  type="text"
-                  id="slackHandle"
-                  name="slackHandle"
-                  value={formData.slackHandle}
-                  onChange={handleChange}
-                  placeholder="@john.doe"
-                  className={`h-14 text-lg border-2 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${
-                    errors.slackHandle ? "border-red-500" : "border-gray-300 dark:border-white/20 focus:border-orange-500"
-                  }`}
-                />
-                {errors.slackHandle && <p className="text-red-500 text-sm">{errors.slackHandle}</p>}
-              </div>
-            </div>
-
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Full Name - Auto-populated, not editable */}
             <div className="space-y-3">
-              <label htmlFor="notes" className="block text-lg font-semibold text-gray-900 dark:text-white">
-                Additional Notes
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
+                Full Name
               </label>
-              <Textarea
-                id="notes"
-                name="notes"
-                rows={4}
-                value={formData.notes}
-                onChange={handleChange}
-                placeholder="Share more details about your contribution..."
-                className="text-lg border-2 border-gray-300 dark:border-white/20 focus:border-orange-500 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              <Input
+                name="fullName"
+                value={formData.fullName}
+                readOnly
+                className="h-12 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
               />
+              {errors.fullName && <p className="text-red-500 text-sm">{errors.fullName}</p>}
             </div>
 
-            <div className="flex items-center space-x-4 p-6 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl">
-              <input
-                id="notifyManager"
-                name="notifyManager"
-                type="checkbox"
-                checked={formData.notifyManager}
-                onChange={handleChange}
-                className="w-6 h-6 rounded border-gray-300 dark:border-gray-600 text-orange-500 focus:ring-orange-500"
-              />
-              <label htmlFor="notifyManager" className="text-lg font-medium text-gray-900 dark:text-white">
-                📧 Notify my manager about this contribution
+            {/* Email Address - Auto-populated, not editable */}
+            <div className="space-y-3">
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
+                Email Address
               </label>
+              <Input
+                name="emailAddress"
+                value={formData.emailAddress}
+                readOnly
+                className="h-12 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+              />
+              {errors.emailAddress && <p className="text-red-500 text-sm">{errors.emailAddress}</p>}
+            </div>
+
+            {/* Region - Dropdown */}
+            <div className="space-y-3">
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
+                Region
+              </label>
+              <select
+                name="region"
+                value={formData.region}
+                onChange={handleChange}
+                className="w-full h-12 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-gray-800"
+              >
+                <option value="">Select an option</option>
+                <option value="AMER">AMER</option>
+                <option value="EMEA">EMEA</option>
+                <option value="JAPAC">JAPAC</option>
+                <option value="India">India</option>
+              </select>
+              {errors.region && <p className="text-red-500 text-sm">{errors.region}</p>}
+            </div>
+
+            {/* Hub - Text input */}
+            <div className="space-y-3">
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
+                Hub
+              </label>
+              <Input
+                name="hub"
+                value={formData.hub}
+                onChange={handleChange}
+                placeholder="Write something"
+                className="h-12 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-gray-800"
+              />
+              {errors.hub && <p className="text-red-500 text-sm">{errors.hub}</p>}
+            </div>
+
+            {/* Event Name */}
+            <div className="space-y-3">
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
+                What event did you work on?
+              </label>
+              <Input
+                name="eventName"
+                value={formData.eventName}
+                onChange={handleChange}
+                placeholder="Write something"
+                className="h-12 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-gray-800"
+              />
+              <p className="text-sm text-gray-500">ex: Salesforce Birthday, Dreamforce, any local event.</p>
+              {errors.eventName && <p className="text-red-500 text-sm">{errors.eventName}</p>}
+            </div>
+
+            {/* Role - Dropdown */}
+            <div className="space-y-3">
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
+                What was your role in the event?
+              </label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full h-12 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-gray-800"
+              >
+                <option value="">Select an option</option>
+                <option value="project-manager">Project Manager</option>
+                <option value="committee-member">Committee Member</option>
+                <option value="on-site-help">On-site Help (Logistics)</option>
+                <option value="managed-committee-call">Managed Committee Call</option>
+              </select>
+              {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}
+            </div>
+
+            {/* Manager - Text input */}
+            <div className="space-y-3">
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
+                Who is your manager?
+              </label>
+              <Input
+                name="manager"
+                value={formData.manager}
+                onChange={handleChange}
+                placeholder="Write something"
+                className="h-12 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-gray-800"
+              />
+              {errors.manager && <p className="text-red-500 text-sm">{errors.manager}</p>}
+            </div>
+
+            {/* Program - Dropdown */}
+            <div className="space-y-3">
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
+                Which program did you work on?
+              </label>
+              <select
+                name="program"
+                value={formData.program}
+                onChange={handleChange}
+                className="w-full h-12 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-orange-500 focus:ring-orange-500 bg-white dark:bg-gray-800"
+              >
+                <option value="">Select an option</option>
+                <option value="Culture Guides">Culture Guides</option>
+                <option value="Salesforce at Home">Salesforce at Home</option>
+              </select>
+              {errors.program && <p className="text-red-500 text-sm">{errors.program}</p>}
             </div>
 
             {errors.submit && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                 <p className="text-red-500 text-center">{errors.submit}</p>
               </div>
             )}
@@ -389,7 +380,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-16 text-xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-3">
@@ -397,10 +388,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
                   Submitting...
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <Zap className="w-6 h-6" />
-                  Submit Activity & Earn Points 🚀
-                </div>
+                "Submit Activity & Earn Points"
               )}
             </Button>
           </form>

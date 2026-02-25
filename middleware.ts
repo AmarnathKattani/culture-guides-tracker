@@ -3,7 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/api/podcast(.*)",   // Podcast data is non-sensitive, keep public
+  "/api/podcast(.*)", // Podcast metadata is public
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

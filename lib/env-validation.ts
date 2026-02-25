@@ -60,7 +60,7 @@ export function validateEnvironmentVariables(): EnvConfig {
   } else if (hasSheetId || hasEnvCreds) {
     const missing = []
     if (!hasSheetId) missing.push('GOOGLE_SHEETS_SHEET_ID')
-    if (!hasEnvCreds) missing.push('GOOGLE_SHEETS_CLIENT_EMAIL and GOOGLE_SHEETS_PRIVATE_KEY (or use google-service-account.json)')
+    if (!hasEnvCreds) missing.push('GOOGLE_SHEETS_CLIENT_EMAIL and GOOGLE_SHEETS_PRIVATE_KEY (or use config/google-service-account.json)')
     if (missing.length > 0) {
       console.warn(`⚠️  Google Sheets partially configured. Missing: ${missing.join(', ')}`)
     }
@@ -89,7 +89,7 @@ export function getEnvironmentInfo() {
     hasGoogleSheets: !!(process.env.GOOGLE_SHEETS_CLIENT_EMAIL && process.env.GOOGLE_SHEETS_PRIVATE_KEY) ||
       !!(process.env.GOOGLE_SHEETS_SHEET_ID && (
         process.env.GOOGLE_SHEETS_CREDENTIALS_PATH ||
-        fs.existsSync(path.join(process.cwd(), 'google-service-account.json'))
+        fs.existsSync(path.join(process.cwd(), 'config', 'google-service-account.json'))
       )),
     hasSlack: !!(process.env.SLACK_BOT_TOKEN && process.env.SLACK_CHANNEL_ID),
     hasGoogleDrive: !!process.env.GOOGLE_DRIVE_API_KEY,

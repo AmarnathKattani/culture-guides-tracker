@@ -1,16 +1,21 @@
 {
   "functions": {
-    "app/api/chat/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/log-activity/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/activities/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/clear-data/route.ts": {
-      "maxDuration": 30
+    "app/api/chat/route.ts": { "maxDuration": 60 },
+    "app/api/log-activity/route.ts": { "maxDuration": 30 },
+    "app/api/activities/route.ts": { "maxDuration": 30 },
+    "app/api/clear-data/route.ts": { "maxDuration": 30 },
+    "app/api/import-activities/route.ts": { "maxDuration": 60 },
+    "app/api/seed-test-data/route.ts": { "maxDuration": 30 },
+    "app/api/user/stats/route.ts": { "maxDuration": 10 },
+    "app/api/podcast/route.ts": { "maxDuration": 10 },
+    "app/api/notebooklm/route.ts": { "maxDuration": 30 }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-DNS-Prefetch-Control", "value": "on" }
+      ]
     }
-  }
+  ]
 }

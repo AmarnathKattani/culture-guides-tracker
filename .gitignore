@@ -1,8 +1,11 @@
 node_modules/
 .next/
+.clerk/
 .env
 .env.local
 .env.production.local
 .env.development.local
-google-service-account.json
+config/google-service-account.json
+tsconfig.tsbuildinfo
+.DS_Store
 *.log

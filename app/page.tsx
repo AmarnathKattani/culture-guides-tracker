@@ -9,8 +9,10 @@ import { Users, Star, Heart } from "lucide-react"
 import Header from "@/components/layout/Header"
 import HomePage from "@/components/pages/HomePage"
 import LogActivityPage from "@/components/pages/LogActivityPage"
+import ImpactPage from "@/components/pages/ImpactPage"
 import DashboardPage from "@/components/pages/DashboardPage"
 import ResourcesPage from "@/components/pages/ResourcesPage"
+import ResourcesChatbot from "@/components/chatbot/ResourcesChatbot"
 
 import LoadingSpinner from "@/components/ui/LoadingSpinner"
 
@@ -217,6 +219,8 @@ export default function CultureGuidesApp() {
         return <HomePage onNavigate={setActiveTab} />
       case "log-activity":
         return <LogActivityPage onNavigate={setActiveTab} />
+      case "impact":
+        return <ImpactPage onNavigate={setActiveTab} />
       case "dashboard":
         return <DashboardPage />
       case "resources":
@@ -247,6 +251,8 @@ export default function CultureGuidesApp() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {!isLoading && <ResourcesChatbot />}
     </div>
   )
 }

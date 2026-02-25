@@ -1,11 +1,10 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Star, Users, Heart, Sparkles } from "lucide-react"
+import { Star, Users, Heart, Phone, Sparkles } from "lucide-react"
 import Image from "next/image"
-import GlareHover from "@/components/ui/GlareHover"
+import { NeumorphismButton } from "@/components/ui/neumorphism-button"
 
 interface HomePageProps {
   onNavigate: (page: string) => void
@@ -30,11 +29,19 @@ const activityTypes = [
   },
   {
     id: "on-site-help",
-    role: "On-site Help",
+    role: "On-site Help (Logistics)",
     points: 25,
     description: "Provide support during events and activities",
     gradient: "from-green-500 to-emerald-500",
     icon: Heart,
+  },
+  {
+    id: "managed-committee-call",
+    role: "Managed Committee Call",
+    points: 25,
+    description: "Organize and lead committee meetings",
+    gradient: "from-orange-500 to-red-500",
+    icon: Phone,
   },
 ]
 
@@ -78,39 +85,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 </p>
               </div>
 
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <GlareHover
-                  glareColor="#ffffff"
-                  glareOpacity={0.4}
-                  duration={0.8}
-                  className="rounded-xl"
-                >
-                  <Button
-                    onClick={() => onNavigate("log-activity")}
-                    size="lg"
-                    className="relative overflow-hidden px-8 sm:px-12 md:px-16 py-4 sm:py-5 text-base sm:text-lg font-bold bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-xl shadow-2xl border-0 backdrop-blur-sm transition-all duration-300 group"
-                  >
-                    {/* Animated key press effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                      initial={{ y: "100%" }}
-                      whileHover={{ y: "0%" }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                    />
-                    
-                    {/* Key border effect */}
-                    <div className="absolute inset-0 left-auto top-auto border-2 border-white/30 rounded-xl group-hover:border-white/50 transition-colors duration-300" />
-                    
-                    {/* Button content */}
-                    <div className="relative z-10 flex items-center justify-center">
-                      <span className="tracking-wide">Start Now</span>
-                    </div>
-                    
-                    {/* Bottom shadow (key depth effect) */}
-                    <div className="absolute bottom-0 left-2 right-2 h-1 bg-black/20 rounded-b-xl transform group-hover:h-0.5 transition-all duration-200" />
-                  </Button>
-                </GlareHover>
-              </motion.div>
+              <NeumorphismButton
+                variant="dark"
+                onClick={() => onNavigate("log-activity")}
+              >
+                Start Now
+              </NeumorphismButton>
             </motion.div>
           </div>
         </div>
@@ -135,7 +115,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             </CardHeader>
 
             <CardContent className="mt-8 sm:mt-12 md:mt-16">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 items-stretch max-w-4xl mx-auto">
                 {activityTypes.map((activity, index) => (
                   <motion.div
                     key={activity.id}
@@ -143,9 +123,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.1 * index }}
                     whileHover={{ y: -10 }}
+                    className="w-full"
                   >
-                    <Card className="liquid-glass border border-gray-200 dark:border-blue-500/10 shadow-xl p-4 sm:p-6 md:p-8 text-center group hover:shadow-2xl transition-all duration-500 bg-white/90 dark:bg-card/70 backdrop-blur-md hover:border-gray-300 dark:hover:border-blue-400/30">
-                      <CardContent className="pt-6 space-y-6">
+                    <Card className="liquid-glass border border-gray-200 dark:border-blue-500/10 shadow-xl p-4 sm:p-6 md:p-8 text-center group hover:shadow-2xl transition-all duration-500 bg-white/90 dark:bg-card/70 backdrop-blur-md hover:border-gray-300 dark:hover:border-blue-400/30 h-full flex flex-col">
+                      <CardContent className="pt-6 space-y-6 flex-1 flex flex-col">
                         {/* Icon */}
                         <div
                           className={`w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 mx-auto rounded-2xl bg-gradient-to-r ${activity.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}
@@ -154,8 +135,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                             className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 text-white transition-all duration-300 ${
                               activity.id === 'project-manager' 
                                 ? 'group-hover:animate-spin-slow' 
-                                : activity.id === 'committee-member'
-                                ? 'group-hover:animate-bounce'
                                 : activity.id === 'on-site-help'
                                 ? 'group-hover:animate-heartbeat'
                                 : ''
@@ -172,7 +151,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                         </div>
 
                         {/* Content */}
-                        <div className="space-y-3">
+                        <div className="space-y-3 flex-1 flex flex-col">
                           <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{activity.role}</h3>
                           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">{activity.description}</p>
                         </div>
