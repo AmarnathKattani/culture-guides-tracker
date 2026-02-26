@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Trophy, Users, Calendar, TrendingUp, Loader2, Table2, Database } from "lucide-react"
+import AnimatedList from "@/components/ui/AnimatedList"
 
 interface LeaderboardEntry {
   name: string
@@ -252,28 +253,21 @@ export default function DashboardPage() {
                   <CardDescription className="text-gray-500 dark:text-gray-400">Scroll for all ranks ({selectedQuarter})</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-hidden">
-                  <div className="max-h-[500px] dashboard-scroll grid gap-4 pr-2 overflow-x-hidden">
-                    {leaderboardData.length > 0 ? (
-                      leaderboardData.map((user, index) => (
-                        <motion.div
-                          key={user.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
+                  {leaderboardData.length > 0 ? (
+                    <AnimatedList
+                      items={leaderboardData.map((user, index) => (
+                        <div
                           className={`flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 min-w-0 ${
                             index < 3 ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" : ""
                           }`}
                           onClick={index < 3 ? () => handleTop3Click(user, index + 1) : undefined}
-                          onKeyDown={index < 3 ? (e) => e.key === "Enter" && handleTop3Click(user, index + 1) : undefined}
-                          role={index < 3 ? "button" : undefined}
-                          tabIndex={index < 3 ? 0 : undefined}
                         >
                           <div className="flex-shrink-0">
                             {index < 3 ? (
                               <div className={`flex items-center justify-center w-8 h-8 ${
-                                index === 0 ? 'text-yellow-500' : 
-                                index === 1 ? 'text-gray-400' : 
-                                'text-amber-600'
+                                index === 0 ? "text-yellow-500" :
+                                index === 1 ? "text-gray-400" :
+                                "text-amber-600"
                               }`}>
                                 <Trophy className="w-8 h-8" />
                               </div>
@@ -283,8 +277,8 @@ export default function DashboardPage() {
                               </div>
                             )}
                           </div>
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                            {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                            {user.name.split(" ").map((n) => n[0]).join("").toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold truncate text-gray-900 dark:text-white">{user.name}</p>
@@ -296,16 +290,20 @@ export default function DashboardPage() {
                             <p className="font-bold text-lg text-gray-900 dark:text-white">{user.points}</p>
                             <Progress value={(user.points / maxPoints) * 100} className="w-16 h-2 min-w-[4rem]" />
                           </div>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">No activities logged yet</p>
-                        <p className="text-sm">Start logging activities to see the leaderboard!</p>
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      ))}
+                      showGradients
+                      enableArrowNavigation={false}
+                      displayScrollbar
+                      maxHeight="500px"
+                    />
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium">No activities logged yet</p>
+                      <p className="text-sm">Start logging activities to see the leaderboard!</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -321,18 +319,15 @@ export default function DashboardPage() {
                   <CardDescription className="text-gray-500 dark:text-gray-400">Scroll for all activities ({selectedQuarter})</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="max-h-[500px] dashboard-scroll space-y-4 pr-2">
-                    {activities.length > 0 ? (
-                      activities.map((activity, index) => (
-                        <motion.div
+                  {activities.length > 0 ? (
+                    <AnimatedList
+                      items={activities.map((activity, index) => (
+                        <div
                           key={index}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
                           className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-white/5"
                         >
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
-                            {activity.fullName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            {activity.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate text-gray-900 dark:text-white">{activity.eventName}</p>
@@ -340,19 +335,23 @@ export default function DashboardPage() {
                               {activity.fullName} • {activity.region} • {activity.points} points
                             </p>
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                             {new Date(activity.timestamp).toLocaleDateString()}
                           </div>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">No recent activities</p>
-                        <p className="text-sm">Activities will appear here once logged</p>
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      ))}
+                      showGradients
+                      enableArrowNavigation={false}
+                      displayScrollbar
+                      maxHeight="500px"
+                    />
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium">No recent activities</p>
+                      <p className="text-sm">Activities will appear here once logged</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

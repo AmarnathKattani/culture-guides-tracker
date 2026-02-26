@@ -22,37 +22,31 @@ export const metadata: Metadata = {
   generator: "v0.dev",
 }
 
-const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const content = (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <DotPatternBackground />
-          <div className="min-h-screen relative">
-            {children}
-            <Toaster />
-          </div>
-        </ThemeProvider>
-      </body>
-    </html>
+  return (
+    <ClerkProvider publishableKey={clerkPublishableKey}>
+      <html lang="en" suppressHydrationWarning>
+        <body className={inter.className}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <DotPatternBackground />
+            <div className="min-h-screen relative">
+              {children}
+              <Toaster />
+            </div>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   )
-
-  // Only wrap with ClerkProvider when a valid publishable key is present.
-  // During local development without Clerk keys, the app runs without auth.
-  if (clerkPublishableKey && !clerkPublishableKey.startsWith("YOUR_")) {
-    return <ClerkProvider publishableKey={clerkPublishableKey}>{content}</ClerkProvider>
-  }
-
-  return content
 }

@@ -1,10 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Star, Users, Heart, Phone, Sparkles } from "lucide-react"
+import { Star, Users, Heart, Phone } from "lucide-react"
 import Image from "next/image"
 import { NeumorphismButton } from "@/components/ui/neumorphism-button"
+import MagnetLines from "@/components/ui/MagnetLines"
 
 interface HomePageProps {
   onNavigate: (page: string) => void
@@ -46,11 +48,27 @@ const activityTypes = [
 ]
 
 export default function HomePage({ onNavigate }: HomePageProps) {
+  const [logoRotation, setLogoRotation] = useState(0)
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 space-y-12 sm:space-y-24">
       {/* Hero Section */}
       <section className="relative">
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-900/60 via-purple-900/50 to-indigo-900/60 backdrop-blur-sm border border-blue-500/20">
+          {/* MagnetLines interactive background */}
+          <div className="absolute inset-0 pointer-events-none">
+            <MagnetLines
+              rows={10}
+              columns={18}
+              containerWidth="100%"
+              containerHeight="100%"
+              lineColor="rgba(255,255,255,0.35)"
+              lineWidth="2px"
+              lineHeight="24px"
+              baseAngle={-10}
+              className="opacity-90"
+            />
+          </div>
           {/* Content */}
           <div className="relative z-10 text-center py-12 sm:py-16 md:py-24 lg:py-32 px-4 sm:px-6 md:px-8">
             <motion.div
@@ -59,18 +77,23 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               transition={{ duration: 0.8 }}
               className="space-y-8"
             >
-              {/* Salesforce Logo */}
-              <div className="relative mb-3 sm:mb-4">
+              {/* Culture Guides Logo - click on logo only to spin */}
+              <motion.div
+                className="relative mb-3 sm:mb-4 w-fit mx-auto cursor-pointer select-none"
+                animate={{ rotate: logoRotation }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+                onClick={() => setLogoRotation((prev) => prev + 360)}
+              >
                 <div className="mx-auto w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 xl:w-56 xl:h-56 flex items-center justify-center">
                   <Image
                     src="/culture-guides-logo.png"
                     alt="Culture Guides Logo"
                     width={200}
                     height={200}
-                    className="w-full h-full object-contain drop-shadow-2xl"
+                    className="w-full h-full object-contain drop-shadow-2xl pointer-events-none"
                   />
                 </div>
-              </div>
+              </motion.div>
 
               <div className="space-y-3 sm:space-y-4">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight leading-tight">
@@ -80,7 +103,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   </span>
                 </h1>
 
-                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white max-w-3xl mx-auto leading-relaxed px-2">
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white max-w-3xl mx-auto leading-relaxed px-2 text-center font-medium">
                   Log activities . Earn points . Lead change
                 </p>
               </div>

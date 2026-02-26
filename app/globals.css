@@ -344,3 +344,12 @@ body {
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
 }
+
+/* MagnetLines component */
+.magnet-line {
+  display: block;
+  transform-origin: center;
+  will-change: transform;
+  transform: rotate(var(--rotate));
+  transition: transform 0.15s ease-out;
+}

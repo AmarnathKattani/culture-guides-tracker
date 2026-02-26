@@ -127,7 +127,6 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
       if (response.ok) {
         setSubmissionResult(result)
         setIsSubmitted(true)
-        // Remove auto-hide timeout - user will click OK button to dismiss
       } else {
         throw new Error(result.error || "Failed to submit")
       }
@@ -241,9 +240,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Full Name - Auto-populated, not editable */}
             <div className="space-y-3">
-              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
-                Full Name
-              </label>
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">Full Name</label>
               <Input
                 name="fullName"
                 value={formData.fullName}
@@ -255,9 +252,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
 
             {/* Email Address - Auto-populated, not editable */}
             <div className="space-y-3">
-              <label className="block text-lg font-semibold text-gray-900 dark:text-white">
-                Email Address
-              </label>
+              <label className="block text-lg font-semibold text-gray-900 dark:text-white">Email Address</label>
               <Input
                 name="emailAddress"
                 value={formData.emailAddress}
