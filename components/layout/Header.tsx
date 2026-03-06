@@ -237,6 +237,18 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                 </motion.div>
               ))}
               
+              {/* Mobile Auth - Sign In */}
+              <SignedOut>
+                <div className="sm:hidden">
+                  <SignInButton mode="modal">
+                    <Button
+                      className="w-full justify-start rounded-xl text-sm font-medium bg-gradient-to-r from-orange-500 to-pink-500 text-white"
+                    >
+                      Sign In
+                    </Button>
+                  </SignInButton>
+                </div>
+              </SignedOut>
               {/* Mobile Theme Toggle */}
               {mounted && (
                 <motion.div
