@@ -257,6 +257,7 @@ export default function DashboardPage() {
                     <AnimatedList
                       items={leaderboardData.map((user, index) => (
                         <div
+                          key={user.emailAddress || `${user.name}-${index}`}
                           className={`flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 min-w-0 ${
                             index < 3 ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" : ""
                           }`}
