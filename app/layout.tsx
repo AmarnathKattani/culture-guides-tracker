@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { DotPatternBackground } from "@/components/ui/dot-pattern-background"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -50,6 +51,7 @@ export default function RootLayout({
             <div className="min-h-screen relative">
               {children}
               <Toaster />
+              <SpeedInsights />
             </div>
           </ThemeProvider>
         </body>
