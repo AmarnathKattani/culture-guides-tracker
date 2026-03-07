@@ -1,13 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Star, Users, Heart, Phone } from "lucide-react"
 import Image from "next/image"
 import { NeumorphismButton } from "@/components/ui/neumorphism-button"
-import MagnetLines from "@/components/ui/MagnetLines"
-
 interface HomePageProps {
   onNavigate: (page: string) => void
 }
@@ -50,25 +48,15 @@ const activityTypes = [
 export default function HomePage({ onNavigate }: HomePageProps) {
   const [logoRotation, setLogoRotation] = useState(0)
 
+  useEffect(() => {
+    setLogoRotation(360)
+  }, [])
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 space-y-12 sm:space-y-24">
       {/* Hero Section */}
       <section className="relative">
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-900/60 via-purple-900/50 to-indigo-900/60 backdrop-blur-sm border border-blue-500/20">
-          {/* MagnetLines interactive background */}
-          <div className="absolute inset-0 pointer-events-none">
-            <MagnetLines
-              rows={10}
-              columns={18}
-              containerWidth="100%"
-              containerHeight="100%"
-              lineColor="rgba(255,255,255,0.35)"
-              lineWidth="2px"
-              lineHeight="24px"
-              baseAngle={-10}
-              className="opacity-90"
-            />
-          </div>
           {/* Content */}
           <div className="relative z-10 text-center py-12 sm:py-16 md:py-24 lg:py-32 px-4 sm:px-6 md:px-8">
             <motion.div
@@ -84,13 +72,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 transition={{ duration: 0.6, ease: "easeInOut" }}
                 onClick={() => setLogoRotation((prev) => prev + 360)}
               >
-                <div className="mx-auto w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 xl:w-56 xl:h-56 flex items-center justify-center">
+                <div className="mx-auto w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 xl:w-56 xl:h-56 flex items-center justify-center overflow-visible">
                   <Image
-                    src="/culture-guides-logo.png"
-                    alt="Culture Guides Logo"
+                    src="/CD_Candy_logo.svg"
+                    alt="CD Candy Logo"
                     width={200}
                     height={200}
-                    className="w-full h-full object-contain drop-shadow-2xl pointer-events-none"
+                    className="w-full h-full object-contain drop-shadow-2xl pointer-events-none scale-[2]"
                   />
                 </div>
               </motion.div>

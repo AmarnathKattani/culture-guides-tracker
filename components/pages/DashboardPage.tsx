@@ -150,6 +150,13 @@ export default function DashboardPage() {
 
   const maxPoints = leaderboardData.length > 0 ? Math.max(...leaderboardData.map((u) => u.points)) : 1
 
+  const statsData = [
+    { label: "Active Culture Guides", color: "text-sky-400" },
+    { label: "Total Points Earned", color: "text-orange-500" },
+    { label: "Activities Logged", color: "text-yellow-500" },
+    { label: "Avg Points per Guide", color: "text-green-500" },
+  ]
+
   const handleTop3Click = (user: LeaderboardEntry, rank: number) => {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })
     setTimeout(() => confetti({ particleCount: 50, spread: 100, origin: { y: 0.5, x: 0.3 } }), 200)
@@ -207,39 +214,91 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Statistics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: Users, label: "Active Culture Guides", value: stats.uniqueUsers, color: "text-sky-400" },
-              { icon: Trophy, label: "Total Points Earned", value: stats.totalPoints, color: "text-orange-500" },
-              { icon: Calendar, label: "Activities Logged", value: stats.totalActivities, color: "text-yellow-500" },
-              { icon: TrendingUp, label: "Avg Points per Guide", value: stats.avgPointsPerGuide, color: "text-green-500" },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="border border-gray-200 dark:border-blue-500/20 bg-white/90 dark:bg-card/70 backdrop-blur-md">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                          <NumberTicker
-                            value={stat.value}
-                            className="font-bold"
-                          />
-                        </p>
-                      </div>
-                      <stat.icon className={`w-8 h-8 ${stat.color}`} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+          {/* Statistics - full scene SVG with corner stats (same approach as Impact page) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-blue-500/20 min-h-[220px]"
+          >
+            {/* Background image - fills container, scale slightly to eliminate corner gaps */}
+            <img
+              src="/Untitled%20(1280%20x%20220%20px)%20(1).svg"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-[left_center] scale-[1.02]"
+              aria-hidden
+            />
+            {/* Overlay - right side only, left stays clear for Astro */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 dark:to-black/40 pointer-events-none" aria-hidden />
+            {/* Left: Astro area (clear). Right: 2x2 grid with stats */}
+            <div className="absolute inset-0 flex items-stretch">
+              {/* Left - Astro clear */}
+              <div className="w-[45%] min-w-[120px] shrink-0" />
+              {/* Right - 2x2 grid spanning the full area */}
+              <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-3 sm:gap-4 p-3 sm:p-4 content-stretch items-stretch min-w-0">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="min-w-0 min-h-0 flex">
+                    <Card className="h-full w-full border border-gray-200/80 dark:border-white/20 bg-white/90 dark:bg-gray-900/80 backdrop-blur-md shadow-none flex flex-col justify-center rounded-md">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <Users className="w-8 h-8 sm:w-10 sm:h-10 text-sky-500 dark:text-sky-400 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm sm:text-base font-medium text-gray-600 dark:text-gray-300 truncate">{statsData[0].label}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tabular-nums truncate">
+                              <NumberTicker value={stats.uniqueUsers} className="font-bold" />
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="min-w-0 min-h-0 flex">
+                    <Card className="h-full w-full border border-gray-200/80 dark:border-white/20 bg-white/90 dark:bg-gray-900/80 backdrop-blur-md shadow-none flex flex-col justify-center rounded-md">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm sm:text-base font-medium text-gray-600 dark:text-gray-300 truncate">{statsData[1].label}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tabular-nums truncate">
+                              <NumberTicker value={stats.totalPoints} className="font-bold" />
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="min-w-0 min-h-0 flex">
+                    <Card className="h-full w-full border border-gray-200/80 dark:border-white/20 bg-white/90 dark:bg-gray-900/80 backdrop-blur-md shadow-none flex flex-col justify-center rounded-md">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <Calendar className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm sm:text-base font-medium text-gray-600 dark:text-gray-300 truncate">{statsData[2].label}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tabular-nums truncate">
+                              <NumberTicker value={stats.totalActivities} className="font-bold" />
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="min-w-0 min-h-0 flex">
+                    <Card className="h-full w-full border border-gray-200/80 dark:border-white/20 bg-white/90 dark:bg-gray-900/80 backdrop-blur-md shadow-none flex flex-col justify-center rounded-md">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-green-600 dark:text-green-500 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm sm:text-base font-medium text-gray-600 dark:text-gray-300 truncate">{statsData[3].label}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tabular-nums truncate">
+                              <NumberTicker value={stats.avgPointsPerGuide} className="font-bold" />
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Leaderboard */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
@@ -360,29 +419,44 @@ export default function DashboardPage() {
         </>
       )}
 
-      <Dialog open={!!selectedLeaderboardEntry} onOpenChange={(open) => !open && (setSelectedLeaderboardEntry(null), setSelectedRank(null))}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog
+        open={!!selectedLeaderboardEntry}
+        onOpenChange={(open) => !open && (setSelectedLeaderboardEntry(null), setSelectedRank(null))}
+      >
+        <DialogContent className="w-fit max-w-[90vw] overflow-hidden p-0">
           {selectedLeaderboardEntry && selectedRank !== null && (
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <div
-                  className={`flex items-center justify-center ${
-                    selectedRank === 1 ? "text-yellow-500" : selectedRank === 2 ? "text-gray-400" : "text-amber-600"
-                  }`}
-                >
-                  <Trophy className="w-10 h-10" />
+            <>
+              <div className="p-6">
+                <DialogHeader>
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`flex items-center justify-center flex-shrink-0 ${
+                        selectedRank === 1 ? "text-yellow-500" : selectedRank === 2 ? "text-gray-400" : "text-amber-600"
+                      }`}
+                    >
+                      <Trophy className="w-10 h-10" />
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <DialogTitle className="leading-tight">{selectedLeaderboardEntry.name}</DialogTitle>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {selectedLeaderboardEntry.activities} activities • {selectedLeaderboardEntry.region} • {selectedLeaderboardEntry.hub}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {selectedLeaderboardEntry.points.toLocaleString()} points
+                      </p>
+                    </div>
+                  </div>
+                </DialogHeader>
+                {/* Celebration image below dialog content */}
+                <div className="mt-4 overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
+                  <img
+                    src="/EBR-EEF%20Epoch%20Images%20Celebration-1245x1245px-Rec0ADHELC7AA-1.png"
+                    alt="EBR-EEF Epoch celebration"
+                    className="w-[420px] max-w-[85vw] h-auto object-contain block"
+                  />
                 </div>
-                <span>{selectedLeaderboardEntry.name}</span>
-              </DialogTitle>
-              <div className="space-y-2 pt-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {selectedLeaderboardEntry.activities} activities • {selectedLeaderboardEntry.region} • {selectedLeaderboardEntry.hub}
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {selectedLeaderboardEntry.points.toLocaleString()} points
-                </p>
               </div>
-            </DialogHeader>
+            </>
           )}
         </DialogContent>
       </Dialog>

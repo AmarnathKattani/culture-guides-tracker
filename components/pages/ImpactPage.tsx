@@ -123,16 +123,18 @@ function ImpactContent({
         transition={{ duration: 0.4 }}
         className="space-y-6 sm:space-y-8"
       >
-        {/* Hero section with image background */}
+        {/* Hero section - aligned same as dashboard banner */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative min-h-[220px] rounded-2xl overflow-hidden border border-orange-200/50 dark:border-orange-500/20"
+          className="relative min-h-[220px] w-full rounded-xl overflow-hidden border border-orange-200/50 dark:border-orange-500/20"
         >
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/Culture%20Guides%20Re-Launch-%20%28EV%29%20Q3%20FY24%20-%201205668211021529-01.png')" }}
+          <img
+            src="/impact_page.svg"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-[left_center] scale-[1.02]"
+            aria-hidden
           />
         </motion.section>
 

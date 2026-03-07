@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
@@ -36,11 +36,15 @@ const questionPools: Record<string, string[]> = {
     'When does the FY27 sign-up close?',
     'Is manager approval required to join?',
     'How long is the Culture Guide term?',
+    'Where do I sign up for FY27 Culture Guides?',
+    'What is the sign up link?',
   ],
   leads: [
     'Who is the regional lead for India?',
     'Who is the regional lead for APAC?',
     'Who is the regional lead for AMER?',
+    'Who is the regional lead for EMEA?',
+    'Who is the regional lead for LATAM?',
     'How do I become a Hub Lead?',
     'What does a Hub Lead do?',
     'Who is the program owner?',
@@ -52,6 +56,8 @@ const questionPools: Record<string, string[]> = {
     'How many points for project managing an event?',
     'How many points for on-site help?',
     'When can I redeem points?',
+    'How do I log Culture Guide Rockstar hours?',
+    'Where is the Rockstars workflow?',
   ],
   events: [
     'What is the budget per person for events?',
@@ -60,6 +66,9 @@ const questionPools: Record<string, string[]> = {
     'What local events can Culture Guides run?',
     'How do I plan a post-event recap?',
     'What tools help with event communications?',
+    'What is the Event Planning Template?',
+    'How do I co-brand with equality groups?',
+    'Who do I email for external event approval?',
   ],
   sustainability: [
     'What are the sustainability rules for events?',
@@ -70,6 +79,9 @@ const questionPools: Record<string, string[]> = {
     'What is the Culture Guides Slack channel?',
     'What hub-specific Slack channels exist?',
     'How do I use the Culture Guide Rockstars workflow?',
+    'What is #cultureguides-finance?',
+    'What is #cultureguides-global-leads?',
+    'What is #help-employee-event-finder?',
   ],
   program: [
     'What is the Culture Guides Program?',
@@ -77,15 +89,66 @@ const questionPools: Record<string, string[]> = {
     'What marquee events do Culture Guides support?',
     'Who is the Culture Guides Program Owner?',
   ],
+  toolkit: [
+    'How do I get started as a Hub Lead?',
+    'Where is the Culture Guides Handbook?',
+    'How do I name my hub Slack channel?',
+    'How do I become an EE Finder Admin?',
+    "Who do I contact if I don't know my region lead?",
+    'Where are Hub Lead meetings?',
+    'What is the Slack channel naming convention for hubs?',
+  ],
+  budget: [
+    'What is the Culture Guides cost center?',
+    'What is the maximum budget per activity?',
+    'What is the budget per person for events?',
+    'What is the difference between P-Card and T&E Amex?',
+    'How do I allocate expenses in Concur?',
+    'Where do I submit budget requests?',
+    'Can I use budget for swag?',
+    'What expense type do I use for Concur?',
+    'When do I submit P-Card expenses?',
+  ],
+  meetingforce: [
+    'When do I need to use Meetingforce?',
+    'How far in advance do I need to submit contracts to Meetingforce?',
+    'How do I cancel an event in Meetingforce?',
+    'Do I need Meetingforce for internal events without vendors?',
+  ],
+  recruitment: [
+    'Where can I find recruitment communication templates?',
+    'How do I recruit new Culture Guide committee members?',
+  ],
+  eefinder: [
+    'How do I get EE Finder admin training?',
+    'What tags should I use on Employee Event Finder?',
+    'Where do I post my Culture Guide events?',
+  ],
+  roles: [
+    'What does a Hub Committee Lead do?',
+    'What are Pillar Leads?',
+    'What is the Culture Pillar Lead role?',
+    'What is the Wellbeing Pillar Lead role?',
+    'How often should Hub Committee meetings be?',
+    'What goes in a post-event recap?',
+    'Where do I post post-event recaps?',
+    'Where do I report final budget spend?',
+  ],
 }
 
-const topicOrder = ['signup', 'leads', 'points', 'events', 'sustainability', 'slack', 'program']
+const topicOrder = ['signup', 'leads', 'points', 'events', 'budget', 'meetingforce', 'toolkit', 'roles', 'eefinder', 'recruitment', 'sustainability', 'slack', 'program']
 
 function detectTopic(text: string): string {
   if (text.includes('sign up') || text.includes('join') || text.includes('fy27') || text.includes('registration')) return 'signup'
   if (text.includes('hub lead') || text.includes('lead for') || text.includes('region lead') || text.includes('regional lead') || text.includes('program owner')) return 'leads'
   if (text.includes('point') || text.includes('reward') || text.includes('rockstar') || text.includes('redeem')) return 'points'
-  if (text.includes('event') || text.includes('planning') || text.includes('budget') || text.includes('meetingforce')) return 'events'
+  if (text.includes('cost center') || text.includes('concur') || text.includes('p-card') || text.includes('budget request') || text.includes('7133') || text.includes('maximum budget') || text.includes('expense type')) return 'budget'
+  if (text.includes('meetingforce')) return 'meetingforce'
+  if (text.includes('eefinder') || text.includes('event finder') || text.includes('employee event finder')) return 'eefinder'
+  if (text.includes('pillar') || text.includes('committee lead') || text.includes('post-event recap') || text.includes('budget spend')) return 'roles'
+  if (text.includes('recruit') || text.includes('recruitment') || text.includes('committee member')) return 'recruitment'
+  if (text.includes('handbook') || text.includes('get started') || text.includes('slack channel nam') || text.includes('hub lead meeting')) return 'toolkit'
+  if (text.includes('event') || text.includes('planning') || text.includes('budget') || text.includes('template') || text.includes('co-brand')) return 'events'
   if (text.includes('sustainab') || text.includes('plastic') || text.includes('catering') || text.includes('swag')) return 'sustainability'
   if (text.includes('slack') || text.includes('channel') || text.includes('#cultureguides')) return 'slack'
   return 'program'
@@ -109,8 +172,15 @@ export default function ResourcesChatbot() {
   const usedQuestionsRef = useRef<Set<string>>(new Set())
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  const chatId = useMemo(() => crypto.randomUUID(), [])
+  const { messages, sendMessage, status, error } = useChat({
+    id: chatId,
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      prepareSendMessagesRequest({ messages: msgs, id }) {
+        return { body: { messages: msgs, chatId: id } }
+      },
+    }),
     messages: [
       {
         id: 'welcome',
@@ -199,6 +269,13 @@ export default function ResourcesChatbot() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
+
+            {/* Error banner */}
+            {error && (
+              <div className="mx-4 mt-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm">
+                {error.message}
+              </div>
+            )}
 
             {/* Messages area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-800/50">
